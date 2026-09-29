@@ -28,9 +28,27 @@ jobs:
         npm install --legacy-peer-deps
         npm run build || true
 
-    - name: Sync Capacitor Android Project
+    - name: Configure Web Assets and Sync Capacitor
       run: |
-        npx cap sync android || npx @capacitor/cli sync android
+        # Point Capacitor to the Vite 'dist' output directory
+        if [ -f "capacitor.config.json" ]; then
+          node -e '
+            const fs = require("fs");
+            const config = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
+            config.webDir = "dist";
+            fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
+          '
+        fi
+        
+        # Ensure fallback www directory exists with files copied from dist
+        mkdir -p www
+        if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
+          cp -r dist/* www/
+        elif [ -f "index.html" ]; then
+          cp index.html www/
+        fi
+
+        npx cap sync android
 
     - name: Build Debug APK with Gradle
       run: |
