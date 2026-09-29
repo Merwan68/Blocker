@@ -38,6 +38,28 @@ export default function App() {
   const [blockedCategory, setBlockedCategory] = useState<ProtectionCategory>('Ethiopian Sportsbook');
   const [blockedDestination, setBlockedDestination] = useState('');
 
+  const [isZipping, setIsZipping] = useState(false);
+
+  const handleDownloadFullZip = async () => {
+    try {
+      setIsZipping(true);
+      const { generateProjectZip } = await import('./services/zipProjectGenerator');
+      const blob = await generateProjectZip();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'AegisBet-Flutter-Android-Project.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Failed to create zip:', e);
+    } finally {
+      setIsZipping(false);
+    }
+  };
+
   const updateState = (newState: BlockerState) => {
     setBlockerState(newState);
     saveBlockerState(newState);
@@ -236,8 +258,19 @@ export default function App() {
             </button>
           </nav>
 
-          {/* Quick Status Pill */}
-          <div className="flex items-center gap-2">
+          {/* Header Action Buttons */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleDownloadFullZip}
+              disabled={isZipping}
+              className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-950/40 transition-all active:scale-95"
+              title="Download entire project as a ZIP file"
+            >
+              <Download className={`w-3.5 h-3.5 ${isZipping ? 'animate-bounce' : ''}`} />
+              <span className="hidden sm:inline">{isZipping ? 'Creating ZIP...' : 'Download Project (.zip)'}</span>
+              <span className="sm:hidden">ZIP</span>
+            </button>
+
             <span className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1.5 ${
               blockerState.isProtectionActive
                 ? 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60'
