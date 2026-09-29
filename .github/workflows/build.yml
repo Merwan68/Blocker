@@ -23,20 +23,21 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install dependencies and Capacitor CLI
+    - name: Install dependencies and build web assets
       run: |
         npm install --legacy-peer-deps
-        npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
+        npm run build
 
-    - name: Configure Capacitor and Add Android Platform
+    - name: Set up Capacitor Android Platform
       run: |
+        npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
+        
+        # Ensure config points to dist
         node -e '
           const fs = require("fs");
           let config = {};
           if (fs.existsSync("capacitor.config.json")) {
-            try {
-              config = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
-            } catch (e) {}
+            try { config = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8")); } catch (e) {}
           }
           config.appId = config.appId || "com.aegisbet.app";
           config.appName = config.appName || "Blocker";
@@ -44,19 +45,18 @@ jobs:
           fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
         '
 
-        rm -rf android
-        npx cap add android
-
-    - name: Build Web Assets and Sync Capacitor
-      run: |
-        npm run build
+        # Force clean generation if android folder doesn't exist or lacks gradlew
+        if [ ! -f "android/gradlew" ]; then
+          rm -rf android
+          npx cap add android
+        fi
         npx cap sync android
 
     - name: Build Debug APK with Gradle
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --no-daemon
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
