@@ -23,15 +23,13 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Install dependencies and build web assets
+    - name: Install dependencies and Capacitor CLI
       run: |
         npm install --legacy-peer-deps
         npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
-        npm run build || true
 
     - name: Configure Capacitor and Add Android Platform
       run: |
-        # Ensure capacitor.config.json has appId, appName, and webDir set properly
         node -e '
           const fs = require("fs");
           let config = {};
@@ -46,9 +44,12 @@ jobs:
           fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
         '
 
-        # Remove incomplete android folder and let Capacitor generate a fresh native project with wrapper
         rm -rf android
         npx cap add android
+
+    - name: Build Web Assets and Sync Capacitor
+      run: |
+        npm run build
         npx cap sync android
 
     - name: Build Debug APK with Gradle
