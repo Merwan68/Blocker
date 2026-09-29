@@ -28,7 +28,7 @@ jobs:
         npm install --legacy-peer-deps
         npm run build
 
-    - name: Set up Capacitor Android Platform
+    - name: Set up Capacitor Android Platform and Patch Kotlin
       run: |
         npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
         
@@ -45,12 +45,22 @@ jobs:
           fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
         '
 
-        # Force clean generation if android folder doesn't exist or lacks gradlew
-        if [ ! -f "android/gradlew" ]; then
-          rm -rf android
-          npx cap add android
-        fi
+        # Force clean generation
+        rm -rf android
+        npx cap add android
         npx cap sync android
+
+        # Inject Kotlin resolution strategy to eliminate version clashes
+        if [ -f "android/build.gradle" ]; then
+          echo "" >> android/build.gradle
+          echo "subprojects {" >> android/build.gradle
+          echo "    configurations.all {" >> android/build.gradle
+          echo "        resolutionStrategy {" >> android/build.gradle
+          echo "            force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.24', 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24', 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.24'" >> android/build.gradle
+          echo "        }" >> android/build.gradle
+          echo "    }" >> android/build.gradle
+          echo "}" >> android/build.gradle
+        fi
 
     - name: Build Debug APK with Gradle
       run: |
