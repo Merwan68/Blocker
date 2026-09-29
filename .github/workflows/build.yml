@@ -28,18 +28,15 @@ jobs:
         npm install --legacy-peer-deps
         npm run build || true
 
-    - name: Install system Gradle and Build APK
+    - name: Sync Capacitor Android Project
       run: |
-        sudo apt-get update && sudo apt-get install -y gradle
-        
-        # Ensure root android folder has proper settings bridging to app
+        npx cap sync android || npx @capacitor/cli sync android
+
+    - name: Build Debug APK with Gradle
+      run: |
         cd android
-        if [ ! -f "settings.gradle" ]; then
-          echo "include ':app'" > settings.gradle
-        fi
-        
-        # Run gradle build targeting the app module specifically
-        gradle :app:assembleDebug
+        chmod +x gradlew
+        ./gradlew assembleDebug
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
