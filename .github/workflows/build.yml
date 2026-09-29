@@ -23,14 +23,15 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Install dependencies and build web assets
+    - name: Install dependencies, Capacitor CLI, and build web assets
       run: |
         npm install --legacy-peer-deps
+        npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
         npm run build || true
 
     - name: Configure Web Assets and Sync Capacitor
       run: |
-        # Point Capacitor to the Vite 'dist' output directory
+        # Point Capacitor to the Vite 'dist' output directory in config if it exists
         if [ -f "capacitor.config.json" ]; then
           node -e '
             const fs = require("fs");
@@ -48,7 +49,8 @@ jobs:
           cp index.html www/
         fi
 
-        npx cap sync android
+        # Run capacitor sync using local node modules binary path
+        npx @capacitor/cli sync android || ./node_modules/.bin/cap sync android
 
     - name: Build Debug APK with Gradle
       run: |
