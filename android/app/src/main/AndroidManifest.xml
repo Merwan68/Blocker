@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AegisBet - Production Android 12+ (API 31-35) Manifest -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.aegisbet.app">
+
+    <!-- Network & Local VPN filtering permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14 (API 34) Foreground Service Type -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    
+    <!-- Android 13 (API 33) Runtime Notification Permission -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Persistence across device reboots -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- Red Blocking Screen Window Overlay -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <application
+        android:allowBackup="false"
+        android:label="AegisBet"
+        android:supportsRtl="true">
+
+        <!-- 1. Native Android 12+ VpnService (Local DNS Sinkhole) -->
+        <service
+            android:name=".vpn.AegisVpnService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Digital wellbeing local DNS sinkhole filtering gambling domains" />
+        </service>
+
+        <!-- 2. Native Accessibility Foreground App Detection -->
+        <service
+            android:name=".accessibility.GamblingDetectionService"
+            android:exported="false"
+            android:label="AegisBet Gambling Barrier"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+        </service>
+
+        <!-- Red 🛑 ACCESS BLOCKED Fullscreen Overlay Activity -->
+        <activity
+            android:name=".ui.BlockingOverlayActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true" />
+
+    </application>
+</manifest>

@@ -1,0 +1,8 @@
+{
+  "name": "AegisBet - Gambling & Betting Blocker for Android 12+",
+  "description": "Production-grade mobile digital wellbeing barrier intercepting sports betting, online casinos, and gambling domains with local loopback DNS sinkholing and app window detection on Android 12+.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
