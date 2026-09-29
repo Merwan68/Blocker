@@ -29,19 +29,24 @@ jobs:
         npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
         npm run build || true
 
-    - name: Point Capacitor to Vite Output and Add Android Platform
+    - name: Configure Capacitor and Add Android Platform
       run: |
-        # Ensure capacitor.config points webDir to 'dist'
-        if [ -f "capacitor.config.json" ]; then
-          node -e '
-            const fs = require("fs");
-            const config = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
-            config.webDir = "dist";
-            fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
-          '
-        fi
+        # Ensure capacitor.config.json has appId, appName, and webDir set properly
+        node -e '
+          const fs = require("fs");
+          let config = {};
+          if (fs.existsSync("capacitor.config.json")) {
+            try {
+              config = JSON.parse(fs.readFileSync("capacitor.config.json", "utf8"));
+            } catch (e) {}
+          }
+          config.appId = config.appId || "com.aegisbet.app";
+          config.appName = config.appName || "Blocker";
+          config.webDir = "dist";
+          fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
+        '
 
-        # Remove incomplete android folder and let Capacitor generate a fresh, complete native project with gradlew
+        # Remove incomplete android folder and let Capacitor generate a fresh native project with wrapper
         rm -rf android
         npx cap add android
         npx cap sync android
