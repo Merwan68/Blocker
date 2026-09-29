@@ -18,9 +18,10 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Generate Gradle Wrapper
+    - name: Initialize Gradle Wrapper
       run: |
         cd android
+        echo "include ':app'" > settings.gradle
         gradle wrapper
 
     - name: Grant execute permission for gradlew
