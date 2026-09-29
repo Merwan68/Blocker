@@ -23,15 +23,15 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Install dependencies, Capacitor CLI, and build web assets
+    - name: Install dependencies and build web assets
       run: |
         npm install --legacy-peer-deps
         npm install --save-dev @capacitor/cli @capacitor/core @capacitor/android --legacy-peer-deps || true
         npm run build || true
 
-    - name: Configure Web Assets and Sync Capacitor
+    - name: Point Capacitor to Vite Output and Add Android Platform
       run: |
-        # Point Capacitor to the Vite 'dist' output directory in config if it exists
+        # Ensure capacitor.config points webDir to 'dist'
         if [ -f "capacitor.config.json" ]; then
           node -e '
             const fs = require("fs");
@@ -40,17 +40,11 @@ jobs:
             fs.writeFileSync("capacitor.config.json", JSON.stringify(config, null, 2));
           '
         fi
-        
-        # Ensure fallback www directory exists with files copied from dist
-        mkdir -p www
-        if [ -d "dist" ] && [ "$(ls -A dist)" ]; then
-          cp -r dist/* www/
-        elif [ -f "index.html" ]; then
-          cp index.html www/
-        fi
 
-        # Run capacitor sync using local node modules binary path
-        npx @capacitor/cli sync android || ./node_modules/.bin/cap sync android
+        # Remove incomplete android folder and let Capacitor generate a fresh, complete native project with gradlew
+        rm -rf android
+        npx cap add android
+        npx cap sync android
 
     - name: Build Debug APK with Gradle
       run: |
