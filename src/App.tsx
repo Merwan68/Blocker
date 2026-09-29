@@ -10,28 +10,32 @@ import {
   CheckCircle2, 
   ShieldAlert,
   Flame,
-  RotateCcw
+  RotateCcw,
+  Coins,
+  Download
 } from 'lucide-react';
 import { BlockerState, BlockEventLog, ProtectionCategory } from './types';
 import { getInitialBlockerState, saveBlockerState, getSavedLogs, saveLogs } from './services/blockerEngine';
 import { DashboardOverview } from './components/DashboardOverview';
 import { InteractiveTester } from './components/InteractiveTester';
+import { EthiopianShieldView } from './components/EthiopianShieldView';
 import { AppsManager } from './components/AppsManager';
 import { DomainsManager } from './components/DomainsManager';
 import { Android12Architecture } from './components/Android12Architecture';
 import { NativeCodeExport } from './components/NativeCodeExport';
+import { PrivateApkInstallerGuide } from './components/PrivateApkInstallerGuide';
 import { BlockingScreenModal } from './components/BlockingScreenModal';
 
 export default function App() {
   const [blockerState, setBlockerState] = useState<BlockerState>(getInitialBlockerState);
   const [logs, setLogs] = useState<BlockEventLog[]>(getSavedLogs);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'tester' | 'apps' | 'domains' | 'android12' | 'export'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'ethiopian' | 'tester' | 'apps' | 'domains' | 'private_apk' | 'android12' | 'export'>('dashboard');
 
   // Blocking Modal State
   const [isBlockingModalOpen, setIsBlockingModalOpen] = useState(false);
   const [blockedTargetName, setBlockedTargetName] = useState('');
   const [blockedTargetType, setBlockedTargetType] = useState<'app' | 'website'>('website');
-  const [blockedCategory, setBlockedCategory] = useState<ProtectionCategory>('Sports Betting');
+  const [blockedCategory, setBlockedCategory] = useState<ProtectionCategory>('Ethiopian Sportsbook');
   const [blockedDestination, setBlockedDestination] = useState('');
 
   const updateState = (newState: BlockerState) => {
@@ -63,13 +67,30 @@ export default function App() {
     updateState(updated);
   };
 
+  const handleToggleEthiopianShield = () => {
+    const updated: BlockerState = {
+      ...blockerState,
+      ethiopianShieldActive: !blockerState.ethiopianShieldActive
+    };
+    updateState(updated);
+  };
+
+  const handleToggleTelebirrBlock = () => {
+    const updated: BlockerState = {
+      ...blockerState,
+      telebirrBettingBlockEnabled: !blockerState.telebirrBettingBlockEnabled
+    };
+    updateState(updated);
+  };
+
   const handleTriggerBlock = (
     name: string, 
     type: 'app' | 'website', 
     category: ProtectionCategory, 
     destination: string
   ) => {
-    // Record into logs
+    const isEthiopian = category === 'Ethiopian Sportsbook';
+
     const newLog: BlockEventLog = {
       id: `log-${Date.now()}`,
       timestamp: Date.now(),
@@ -77,24 +98,23 @@ export default function App() {
       targetType: type,
       category,
       destination,
-      actionTaken: type === 'website' ? 'Sinkholed (0.0.0.0)' : 'Window Intercepted'
+      actionTaken: type === 'website' ? 'Sinkholed (0.0.0.0)' : 'Window Intercepted',
+      isEthiopian
     };
 
     const newLogsList = [newLog, ...logs];
     setLogs(newLogsList);
     saveLogs(newLogsList);
 
-    // Increment deflection count & estimated savings
     const updated: BlockerState = {
       ...blockerState,
       totalBlocks: blockerState.totalBlocks + 1,
       todayBlocks: blockerState.todayBlocks + 1,
       weekBlocks: blockerState.weekBlocks + 1,
-      moneySavedEstimate: blockerState.moneySavedEstimate + 25
+      moneySavedEstimateBirr: blockerState.moneySavedEstimateBirr + (isEthiopian ? 500 : 250)
     };
     updateState(updated);
 
-    // Open Red 🛑 ACCESS BLOCKED screen
     setBlockedTargetName(name);
     setBlockedTargetType(type);
     setBlockedCategory(category);
@@ -121,20 +141,20 @@ export default function App() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-base tracking-tight text-white">AegisBet</span>
-                <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
-                  Gambling & Betting Blocker
+                <span className="text-[10px] text-amber-400 font-semibold px-1.5 py-0.5 bg-amber-950/80 border border-amber-800/60 rounded">
+                  🇪🇹 Ethiopia Edition
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs text-slate-400">
                 <span className="text-emerald-400 font-semibold">Android 12+ (API 31–35)</span>
                 <span aria-hidden="true">·</span>
-                <span>Zero-Friction Auto-Block</span>
+                <span>Private Sideloadable APK</span>
               </div>
             </div>
           </div>
 
           {/* Navigation Controls */}
-          <nav className="hidden lg:flex items-center gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800">
+          <nav className="hidden xl:flex items-center gap-1 p-1 bg-slate-950 rounded-xl border border-slate-800">
             <button
               onClick={() => setActiveTab('dashboard')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
@@ -143,6 +163,16 @@ export default function App() {
             >
               <Activity className="w-3.5 h-3.5" />
               <span>Dashboard</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ethiopian')}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                activeTab === 'ethiopian' ? 'bg-amber-600 text-white shadow' : 'text-amber-400 hover:text-white'
+              }`}
+            >
+              <span>🇪🇹</span>
+              <span>Ethiopian Shield</span>
             </button>
 
             <button
@@ -156,13 +186,23 @@ export default function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('private_apk')}
+              className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                activeTab === 'private_apk' ? 'bg-emerald-600 text-white shadow' : 'text-emerald-400 hover:text-white'
+              }`}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Private APK Install</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('domains')}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 activeTab === 'domains' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'
               }`}
             >
               <Globe2 className="w-3.5 h-3.5" />
-              <span>Websites (1,420+)</span>
+              <span>Websites</span>
             </button>
 
             <button
@@ -172,7 +212,7 @@ export default function App() {
               }`}
             >
               <Smartphone className="w-3.5 h-3.5" />
-              <span>Apps (36+)</span>
+              <span>Apps</span>
             </button>
 
             <button
@@ -182,7 +222,7 @@ export default function App() {
               }`}
             >
               <Cpu className="w-3.5 h-3.5" />
-              <span>Android 12+ Engine</span>
+              <span>Engine</span>
             </button>
 
             <button
@@ -192,7 +232,7 @@ export default function App() {
               }`}
             >
               <FileCode className="w-3.5 h-3.5" />
-              <span>Native Code</span>
+              <span>Source</span>
             </button>
           </nav>
 
@@ -213,42 +253,48 @@ export default function App() {
         </div>
 
         {/* Mobile Segmented Bar */}
-        <div className="lg:hidden flex items-center justify-around border-t border-slate-800 bg-slate-950 p-1 text-xs">
+        <div className="xl:hidden flex items-center justify-around border-t border-slate-800 bg-slate-950 p-1 text-xs overflow-x-auto">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`py-1.5 px-2 rounded-md ${activeTab === 'dashboard' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'dashboard' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
           >
             Dashboard
           </button>
           <button
+            onClick={() => setActiveTab('ethiopian')}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'ethiopian' ? 'text-amber-400 font-bold' : 'text-slate-400'}`}
+          >
+            🇪🇹 Ethiopian Shield
+          </button>
+          <button
             onClick={() => setActiveTab('tester')}
-            className={`py-1.5 px-2 rounded-md ${activeTab === 'tester' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'tester' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
           >
             Test
           </button>
           <button
+            onClick={() => setActiveTab('private_apk')}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'private_apk' ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}
+          >
+            Private APK
+          </button>
+          <button
             onClick={() => setActiveTab('domains')}
-            className={`py-1.5 px-2 rounded-md ${activeTab === 'domains' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'domains' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
           >
             Websites
           </button>
           <button
             onClick={() => setActiveTab('apps')}
-            className={`py-1.5 px-2 rounded-md ${activeTab === 'apps' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'apps' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
           >
             Apps
           </button>
           <button
             onClick={() => setActiveTab('android12')}
-            className={`py-1.5 px-2 rounded-md ${activeTab === 'android12' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
+            className={`py-1.5 px-2 rounded-md shrink-0 ${activeTab === 'android12' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
           >
-            Android 12+
-          </button>
-          <button
-            onClick={() => setActiveTab('export')}
-            className={`py-1.5 px-2 rounded-md ${activeTab === 'export' ? 'text-indigo-400 font-bold' : 'text-slate-400'}`}
-          >
-            Code
+            Engine
           </button>
         </div>
       </header>
@@ -267,11 +313,24 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'ethiopian' && (
+          <EthiopianShieldView
+            state={blockerState}
+            onToggleEthiopianShield={handleToggleEthiopianShield}
+            onToggleTelebirrBlock={handleToggleTelebirrBlock}
+            onTriggerBlock={handleTriggerBlock}
+          />
+        )}
+
         {activeTab === 'tester' && (
           <InteractiveTester
             state={blockerState}
             onTriggerBlock={handleTriggerBlock}
           />
+        )}
+
+        {activeTab === 'private_apk' && (
+          <PrivateApkInstallerGuide />
         )}
 
         {activeTab === 'domains' && (
@@ -311,13 +370,11 @@ export default function App() {
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-4 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>AegisBet Digital Wellbeing Barrier · Built for Android 12+ (API 31–35)</span>
+          <span>AegisBet Ethiopia Edition · Android 12+ (API 31–35) Standalone APK</span>
           <div className="flex items-center gap-3">
-            <span>Zero MitM</span>
+            <span>🇪🇹 Vamos · Betika · HuluSport · Habesha · HarifSport Blocked</span>
             <span>·</span>
-            <span>No Plaintext Tracking</span>
-            <span>·</span>
-            <span>Local Loopback 0.0.0.0</span>
+            <span>Zero Play Store Account Needed</span>
           </div>
         </div>
       </footer>

@@ -135,7 +135,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <DollarSign className="w-4 h-4 text-emerald-400" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">${state.moneySavedEstimate.toLocaleString()}</span>
+            <span className="text-2xl sm:text-3xl font-extrabold text-emerald-400">{state.moneySavedEstimateBirr.toLocaleString()} ETB</span>
             <span className="text-[11px] text-slate-400 block mt-0.5">Based on typical wagering volume</span>
           </div>
         </div>

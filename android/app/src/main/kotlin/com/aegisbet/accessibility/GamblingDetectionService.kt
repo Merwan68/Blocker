@@ -8,12 +8,39 @@ import com.aegisbet.ui.BlockingOverlayActivity
 /**
  * Android 12+ Foreground Application Interceptor.
  * Listens for TYPE_WINDOW_STATE_CHANGED events.
- * When a prohibited sports betting or casino app package gains focus,
- * immediately opens the BlockingOverlayActivity.
+ * Intercepts all Ethiopian and international sports betting, casino, and lottery apps.
  */
 class GamblingDetectionService : AccessibilityService() {
 
     private val blockedPackages = hashSetOf(
+        // Ethiopian Sports Betting & Gambling Apps
+        "com.vamos.bet",
+        "com.vamosbet.app",
+        "com.betika.app.et",
+        "com.betika.app",
+        "com.harifsport.mobile",
+        "com.harifbet.app",
+        "com.habeshabet.app",
+        "com.hulusport.betting",
+        "com.hulusport.app",
+        "com.anbessabet.app",
+        "com.winnerbet.et",
+        "com.gadabet.mobile",
+        "com.ashewa.bet",
+        "com.ethiobet.app",
+        "com.bravobet.mobile",
+        "com.flashbet.et",
+        "com.zemenbet.app",
+        "com.bet251.mobile",
+        "com.bunnabet.app",
+        "com.destabet.app",
+        "com.betking.ethiopia",
+        "com.worldbet.et",
+        "com.galaxybet.et",
+        "org.xbet.client.et",
+        "com.melbet.client.et",
+
+        // International Sportsbooks & Crypto Casinos
         "com.draftkings.sportsbook",
         "com.fanduel.sportsbook",
         "com.bwin.mgm",

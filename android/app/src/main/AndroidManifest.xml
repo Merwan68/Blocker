@@ -1,19 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- AegisBet - Production Android 12+ (API 31-35) Manifest -->
+<!-- AegisBet - Production Manifest Supporting All Versions Above Android 12 (API 31, 32, 33, 34, 35, 36) -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.aegisbet.app">
 
-    <!-- Network & Local VPN filtering permissions -->
+    <!-- Core Network & Local VPN filtering permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- Android 14 (API 34) Foreground Service Type -->
+    
+    <!-- Android 14 (API 34) Foreground Service Type Specification -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     
     <!-- Android 13 (API 33) Runtime Notification Permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
-    <!-- Persistence across device reboots -->
+    <!-- Persistence across device reboots (Android 12+) -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     
     <!-- Red Blocking Screen Window Overlay -->
@@ -21,10 +22,30 @@
 
     <application
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
         android:label="AegisBet"
-        android:supportsRtl="true">
+        android:supportsRtl="true"
+        tools:targetApi="35">
 
-        <!-- 1. Native Android 12+ VpnService (Local DNS Sinkhole) -->
+        <!-- Main UI Activity (Android 12+ strict android:exported required) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Red 🛑 ACCESS BLOCKED Fullscreen Overlay Activity -->
+        <activity
+            android:name=".ui.BlockingOverlayActivity"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:excludeFromRecents="true" />
+
+        <!-- 1. Native VpnService (Local DNS Sinkhole for Android 12, 13, 14, 15, 16) -->
         <service
             android:name=".vpn.AegisVpnService"
             android:exported="false"
@@ -33,28 +54,32 @@
             <intent-filter>
                 <action android:name="android.net.VpnService" />
             </intent-filter>
+            <!-- Android 14+ Mandatory Special Use Subtype Declaration -->
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Digital wellbeing local DNS sinkhole filtering gambling domains" />
+                android:value="Digital wellbeing self-exclusion blocker routing gambling domains to 0.0.0.0" />
         </service>
 
         <!-- 2. Native Accessibility Foreground App Detection -->
         <service
             android:name=".accessibility.GamblingDetectionService"
             android:exported="false"
-            android:label="AegisBet Gambling Barrier"
+            android:label="AegisBet Ethiopian &amp; International Gambling Barrier"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
         </service>
 
-        <!-- Red 🛑 ACCESS BLOCKED Fullscreen Overlay Activity -->
-        <activity
-            android:name=".ui.BlockingOverlayActivity"
-            android:exported="false"
-            android:launchMode="singleInstance"
-            android:excludeFromRecents="true" />
+        <!-- Boot Completed Receiver to auto-restore protection on restart -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 </manifest>

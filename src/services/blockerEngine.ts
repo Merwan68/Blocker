@@ -1,8 +1,8 @@
 import { BlockerState, BlockEventLog, GamblingApp, GamblingDomain } from '../types';
 import { INITIAL_GAMBLING_APPS, INITIAL_GAMBLING_DOMAINS, DATABASE_VERSION } from '../data/gamblingDatabase';
 
-const STORAGE_KEY = 'aegisbet_blocker_state_v2';
-const LOGS_STORAGE_KEY = 'aegisbet_block_logs_v2';
+const STORAGE_KEY = 'aegisbet_blocker_state_et_v3';
+const LOGS_STORAGE_KEY = 'aegisbet_block_logs_et_v3';
 
 export function getInitialBlockerState(): BlockerState {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -15,17 +15,19 @@ export function getInitialBlockerState(): BlockerState {
   }
 
   return {
-    isProtectionActive: true, // Active by default!
+    isProtectionActive: true, // Active by default
     webProtectionEnabled: true,
     appProtectionEnabled: true,
+    ethiopianShieldActive: true, // Dedicated Ethiopian betting filter
+    telebirrBettingBlockEnabled: true, // Telebirr / CBE Birr deposit protection
     adultContentFilter: true,
     safeSearchEnforced: true,
-    protectionStartDate: Date.now() - 21 * 24 * 60 * 60 * 1000, // 21 days active streak
-    totalBlocks: 418,
-    todayBlocks: 17,
-    weekBlocks: 94,
-    hoursGamblingFree: 504, // 21 days * 24h
-    moneySavedEstimate: 1450, // estimated $ saved by avoiding gambling
+    protectionStartDate: Date.now() - 34 * 24 * 60 * 60 * 1000, // 34 days active streak
+    totalBlocks: 624,
+    todayBlocks: 28,
+    weekBlocks: 142,
+    hoursGamblingFree: 816, // 34 days * 24h
+    moneySavedEstimateBirr: 85000, // 85,000 ETB estimated money saved
     customApps: [],
     customDomains: [],
     databaseVersion: DATABASE_VERSION,
@@ -46,37 +48,50 @@ export function getSavedLogs(): BlockEventLog[] {
   }
   return [
     {
-      id: 'log-1',
-      timestamp: Date.now() - 14 * 60 * 1000,
-      targetName: 'DraftKings Sportsbook',
+      id: 'log-et-1',
+      timestamp: Date.now() - 9 * 60 * 1000,
+      targetName: 'Vamos Bet Ethiopia (ቫሞስ ቤት)',
+      targetType: 'website',
+      category: 'Ethiopian Sportsbook',
+      destination: 'vamos.bet',
+      actionTaken: 'Sinkholed (0.0.0.0)',
+      isEthiopian: true
+    },
+    {
+      id: 'log-et-2',
+      timestamp: Date.now() - 32 * 60 * 1000,
+      targetName: 'HuluSport Betting (ሁሉ ስፖርት)',
       targetType: 'app',
-      category: 'Sports Betting',
-      destination: 'com.draftkings.sportsbook',
-      actionTaken: 'Window Intercepted'
+      category: 'Ethiopian Sportsbook',
+      destination: 'com.hulusport.betting',
+      actionTaken: 'Window Intercepted',
+      isEthiopian: true
     },
     {
-      id: 'log-2',
-      timestamp: Date.now() - 85 * 60 * 1000,
-      targetName: 'Stake Crypto Casino',
+      id: 'log-et-3',
+      timestamp: Date.now() - 78 * 60 * 1000,
+      targetName: 'Habesha Bet (ሀበሻ ቤት)',
       targetType: 'website',
-      category: 'Crypto Gambling',
-      destination: 'stake.com',
-      actionTaken: 'Sinkholed (0.0.0.0)'
+      category: 'Ethiopian Sportsbook',
+      destination: 'habeshabet.com',
+      actionTaken: 'Sinkholed (0.0.0.0)',
+      isEthiopian: true
     },
     {
-      id: 'log-3',
-      timestamp: Date.now() - 210 * 60 * 1000,
-      targetName: 'Bovada Sports & Casino',
+      id: 'log-et-4',
+      timestamp: Date.now() - 145 * 60 * 1000,
+      targetName: 'Betika Ethiopia (ቤቲካ)',
       targetType: 'website',
-      category: 'Online Casino',
-      destination: 'bovada.lv',
-      actionTaken: 'Sinkholed (0.0.0.0)'
+      category: 'Ethiopian Sportsbook',
+      destination: 'betika.et',
+      actionTaken: 'Sinkholed (0.0.0.0)',
+      isEthiopian: true
     }
   ];
 }
 
 export function saveLogs(logs: BlockEventLog[]): void {
-  localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs.slice(0, 100)));
+  localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs.slice(0, 150)));
 }
 
 // Clean and normalize domain name
@@ -102,6 +117,12 @@ export function isDomainBlocked(
 
   for (const item of allDomains) {
     if (!item.isEnabled) continue;
+
+    // Check if Ethiopian filter is explicitly disabled
+    if (item.isEthiopian && !state.ethiopianShieldActive) {
+      continue;
+    }
+
     const target = normalizeDomain(item.domain);
     if (clean === target || clean.endsWith('.' + target)) {
       return { isBlocked: true, matchedItem: item };
@@ -126,6 +147,11 @@ export function isAppBlocked(
 
   for (const app of allApps) {
     if (!app.isEnabled) continue;
+
+    if (app.isEthiopian && !state.ethiopianShieldActive) {
+      continue;
+    }
+
     if (clean === app.packageId.toLowerCase()) {
       return { isBlocked: true, matchedApp: app };
     }
