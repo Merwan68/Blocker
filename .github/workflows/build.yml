@@ -28,22 +28,14 @@ jobs:
         npm install --legacy-peer-deps
         npm run build || true
 
-    - name: Generate complete Gradle build files
+    - name: Download Gradle Wrapper Files
       run: |
         cd android
-        # Create root build.gradle if missing
-        if [ ! -f "build.gradle" ]; then
-          echo "allprojects { repositories { google(); mavenCentral() } }" > build.gradle
-        fi
-        # Create settings.gradle if missing
-        if [ ! -f "settings.gradle" ]; then
-          echo "include ':app'" > settings.gradle
-        fi
-        # Generate wrapper
-        gradle wrapper
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
+        mkdir -p gradle/wrapper
+        curl -sL https://raw.githubusercontent.com/react-native-community/template/main/android/gradlew -o gradlew
+        curl -sL https://raw.githubusercontent.com/react-native-community/template/main/android/gradle/wrapper/gradle-wrapper.properties -o gradle/wrapper/gradle-wrapper.properties
+        curl -sL https://raw.githubusercontent.com/react-native-community/template/main/android/gradle/wrapper/gradle-wrapper.jar -o gradle/wrapper/gradle-wrapper.jar
+        chmod +x gradlew
 
     - name: Build Debug APK with Gradle
       run: ./gradlew assembleDebug
